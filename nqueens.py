@@ -1,70 +1,69 @@
 #!/usr/bin/python
+# coding: utf-8
 # A000170 		Number of ways of placing n nonattacking queens on an n X n board. 
 # 1, 1, 0, 0, 2, 10, 4, 40, 92, 352, 724, 2680, 14200, 73712, 365596, 2279184, 14772512, 95815104, 666090624, 4968057848, 39029188884, 314666222712, 2691008701644, 24233937684440, 227514171973736, 2207893435808352, 22317699616364044, 234907967154122528"
 #
 # Example for n=4 (note the symmetry)
-# ..Q.  .Q..
-# Q...  ...Q
-# ...Q  Q...
-# .Q..  ..Q.
+# ☐ ♕ ☐ ☐
+# ☐ ☐ ☐ ♕
+# ♕ ☐ ☐ ☐
+# ☐ ☐ ♕ ☐
 
-import argparse
+# ☐ ☐ ♕ ☐
+# ♕ ☐ ☐ ☐
+# ☐ ☐ ☐ ♕
+# ☐ ♕ ☐ ☐
+
+
+import argparse, sys 
+
 parser = argparse.ArgumentParser(description='Returns the number of ways of placing n nonattacking queens on an n X n board.')
 parser.add_argument('n', type=int, help='The size of the n x n board')
 parser.add_argument('-s','--show', action="store_true", help='Display found solutions')
 args = parser.parse_args()
 n = args.n
 count=0
-steps=0
 
-
-def valid (q, positions):
-    for p in positions:
+def valid (j, row, p):
+    for i in range(row):
         # There's a previous queen in the same column
-        if p[1]==q[1]:
+        if p[i]==j:
             return False
-
-    # There's a previous queen in a diagonal to the left
-    nw = q
-    while True:
-        nw = (nw[0]-1,nw[1]-1)
-        if nw in positions:
+        # There's a previous queen in a diagonal to the left
+        if p[i]+row-i == j:
             return False
-        if nw[0] < 0 or nw[1] < 0:
-            break
-
-    # There's a previous queen in a diagonal to the right
-    ne = q
-    while True:
-        ne = (ne[0]-1,ne[1]+1)
-        if ne in positions:
+        # There's a previous queen in a diagonal to the right
+        if p[i]-row+i == j:
             return False
-        if ne[0] < 0 or ne[1] >= n:
-            break
-
     return True
 
-def nqueens(level,positions):
-    global count,steps
-    steps += 1
+def print_board(p):
+    for i in range(n):
+        for j in range(1,n+1):
+            if (p[i] == j):
+                print("♕"),
+            else:
+                print("☐"),
+        print
+    print
+
+def nqueens(row,queens):
+    global count
     
-    if level == n:
+    if row == n:
         # Found
         count = count + 1
         if args.show:
-            print (str(positions))
+            print_board(queens)
         return
-    for i in range(n):
-        q = (level,i)
-        if valid(q,positions):
-            new_positions = positions.copy()
-            new_positions.add(q)
-            nqueens(level+1, new_positions)
-
+    for i in range(1,n+1):
+        queens[row] = i
+        if valid(i, row,queens):
+            nqueens(row+1, queens)
+    queens[row]=0
 if n < 2:
     count = 1
 else:
-    nqueens(level=0,positions=set())
+    nqueens(row=0,queens=[0]*n)
 print (count)
-print ("Total recursive steps:"+str(steps))
 
