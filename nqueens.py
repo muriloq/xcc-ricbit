@@ -19,6 +19,7 @@ import argparse, sys, sets
 
 parser = argparse.ArgumentParser(description='Returns the number of ways of placing n nonattacking queens on an n X n board.')
 parser.add_argument('n', type=int, help='The size of the n x n board')
+parser.add_argument('-u','--unique', action="store_true", help='Symmetric solutions count only once')
 parser.add_argument('-s','--show', action="store_true", help='Display found solutions')
 args = parser.parse_args()
 n = args.n
@@ -47,8 +48,44 @@ def print_board(q):
             else:
                 print("☐"),
         print
-    print(q)
+    print
 
+def symmetries(q):
+    # Original
+    s = tuple(q)
+
+    # Horizontal Mirror
+    hmirror = tuple(q[::-1])
+    
+    # V. Mirror  
+    vmirror = tuple([n-q[i]+1 for i in range(n)])
+
+    # Transpose
+    transpose = [0]*n
+    for i in range(n):
+        transpose[q[i]-1]=i+1
+    transpose = tuple(transpose)
+    
+    # Transpose + Horizontal Mirror
+    transpose_hmirror = tuple(transpose[::-1])
+    
+    # Transpose + Vertical Mirror
+    transpose_vmirror = tuple([n-transpose[i]+1 for i in range(n)])
+    
+    # Transpose + Vertical Mirror + Horizontal Mirror
+    transpose_vmirror_hmirror = tuple(transpose_vmirror[::-1])
+    
+    # Rotate 180
+    r180 = [0]*n
+    for i in range(n):
+        r180[n-1-i]=n-s[i]+1
+    r180 = tuple(r180)
+    
+    # Rotate 180 + Horizontal Mirror
+    r180_hmirror = tuple(r180[::-1])
+    
+    sym = set([s,hmirror,transpose,vmirror,transpose_hmirror,transpose_vmirror,r180,r180_hmirror,transpose_vmirror_hmirror])
+    return sym
 
 def nqueens(row,q):
     global count
@@ -56,39 +93,17 @@ def nqueens(row,q):
     if row == n:
         # Found
         
-        s = tuple(q)
-        r = tuple(q[::-1])
-        f = tuple([n-q[i]+1 for i in range(n)])
-        fr = tuple(f[::-1])
-        z = [0]*n
-        for i in range(n):
-            z[q[i]-1]=i+1
-        t = tuple(z)
-        tr = tuple(z[::-1])
-        fzr = tuple([n-t[i]+1 for i in range(n)])
+        if args.unique:
+            sym = symmetries(q)
+            if not solutions.isdisjoint(sym):
+                return
+            solutions.add(tuple(q))
 
-        fzrr = tuple(fzr[::-1])
-        u = [0]*n
-        for i in range(n):
-            u[n-1-i]=n-s[i]+1
-        ur = tuple(u[::-1])
-        u = tuple(u)
-
-        
-
-        sym = set([s,r,t,f,tr,fzr,u,ur,fzrr])
-        if not solutions.isdisjoint(sym):
-            return
-        
-        solutions.add(s)
         count = count + 1
 
         if args.show:
             print_board(q)
-#        for q in [s,r,t,f,tr,fzr,u,ur,fzrr]:
-#            print_board(q)
-        
-        print
+
         return
     for i in range(1,n+1):
         q[row] = i
